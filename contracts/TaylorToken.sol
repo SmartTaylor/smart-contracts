@@ -1,6 +1,7 @@
 pragma solidity 0.4.18;
 
 import "./Utils/SafeMath.sol";
+import "./Ownable.sol";
 
 contract TaylorToken is Ownable{
 
@@ -76,7 +77,7 @@ contract TaylorToken is Ownable{
       require(_value <= balances[msg.sender]);
       balances[msg.sender] = balances[msg.sender].sub(_amount);
       totalSupply =  totalSupply.sub(_amount);
-      Burn(msg.sender, _amount)
+      Burn(msg.sender, _amount);
       return true;
     }
 
@@ -85,7 +86,7 @@ contract TaylorToken is Ownable{
     **/
     function transfer(address _to, uint256 _value)
       public
-      onlyWhenTransferActive
+      onlyWhenTransferable
       returns (bool success)
     {
           require(_to != address(0));
@@ -102,7 +103,7 @@ contract TaylorToken is Ownable{
         address _to,
         uint256 _value)
         public
-        onlyWhenTransferActive
+        onlyWhenTransferable
         returns (bool success) {
       require(_to != address(0));
       require(_value <= balances[_from]);
@@ -117,7 +118,7 @@ contract TaylorToken is Ownable{
 
     function approve(address _spender, uint256 _value)
       public
-      onlyWhenTransferActive
+      onlyWhenTransferable
       returns (bool success)
     {
         require((_value!=0) && (allowed[msg.sender][_spender] !=0));
