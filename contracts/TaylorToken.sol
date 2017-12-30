@@ -121,7 +121,9 @@ contract TaylorToken is Ownable{
       onlyWhenTransferable
       returns (bool success)
     {
-        require((_value!=0) && (allowed[msg.sender][_spender] !=0));
+        if(allowed[msg.sender][_spender] != 0){
+          require(_value == 0);
+        }
 
         allowed[msg.sender][_spender] = _value;
         Approval(msg.sender, _spender, _value);
