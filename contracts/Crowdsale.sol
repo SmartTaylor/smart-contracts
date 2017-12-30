@@ -15,7 +15,7 @@ contract Crowdsale is Ownable {
       CONTRACT VARIABLES
   **/
 
-  TaylorToken public token;
+  TaylorToken public taylorToken;
 
   uint256 public startTime;
   uint256 public endTime;
@@ -40,15 +40,15 @@ contract Crowdsale is Ownable {
     public
   {
     require(_startTime >= now);
-    require(_rate > 0);
     require(_token != address(0));
     require(_wallet != address(0));
 
+    taylorToken = TaylorToken(_token);
+
     startTime = _startTime;
     endTime = startTime + duration * 1 days ;
-    rate = _rate;
-    token = _token;
     wallet = _wallet;
+    rates = [70000000000000, 79000000000000, 89000000000000, 93000000000000];
   }
 
 
@@ -70,14 +70,17 @@ contract Crowdsale is Ownable {
     }
     msg.sender.transfer(msg.value - amount);
 
-    uint256 tokens = calculateTokenAmount(amount);
+    uint256 tokens;
+    tokens  = calculateTokenAmount(amount);
 
-    /*
-      TODO: transfer tokens to buyer 
-    */
+
+    taylorToken.transfer(msg.sender, tokens);
+
+    TokensSold = TokensSold.add(tokens);
+    cap = cap.add(amount);
 
     forwardFunds();
-    Purchase(msg.sender, msg.value);
+    Purchase(msg.sender, msg.value, tokens);
   }
 
   /**
@@ -95,11 +98,12 @@ contract Crowdsale is Ownable {
     wallet.transfer(msg.value);
   }
 
-  function calculateTokenAmount(uint256 weiAmount) internal {
-    return weiAmount.mul(rates[getCurrentWeek()]);
+  function calculateTokenAmount(uint256 weiAmount) internal returns(uint tokenAmount){
+    uint week = getCurrentWeek();
+    return weiAmount.mul(rates[week]);
   }
 
-  function getCurrentWeek() pure internal {
+  function getCurrentWeek() view internal returns(uint256 _week){
     return (now - startTime) / 1 weeks;
   }
 

@@ -55,7 +55,7 @@ contract TaylorToken is Ownable{
       transferable = _transferable;
     }
 
-    function transferFromOwner(address _receiver)
+    function transferFromOwner(address _to, uint256 _value)
       public
       onlyOwner
       returns (bool success)
@@ -74,7 +74,7 @@ contract TaylorToken is Ownable{
       onlyOwner
       returns (bool success)
     {
-      require(_value <= balances[msg.sender]);
+      require(_amount <= balances[msg.sender]);
       balances[msg.sender] = balances[msg.sender].sub(_amount);
       totalSupply =  totalSupply.sub(_amount);
       Burn(msg.sender, _amount);
@@ -144,11 +144,11 @@ contract TaylorToken is Ownable{
       return allowed[_owner][_spender];
     }
 
-    function decimals() constant returns (uint8 decimals) {
+    function decimals() constant returns (uint8 _decimals) {
       return decimals;
     }
 
-    function totalSupply() constant returns (uint256 totalSupply) {
+    function totalSupply() constant returns (uint256 _totalSupply) {
       return totalSupply;
     }
 
