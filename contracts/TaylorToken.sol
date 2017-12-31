@@ -50,7 +50,6 @@ contract TaylorToken is Ownable{
     function setTransferable(bool _transferable)
       public
       onlyOwner
-      returns (bool success)
     {
       transferable = _transferable;
     }
@@ -146,11 +145,11 @@ contract TaylorToken is Ownable{
       return allowed[_owner][_spender];
     }
 
-    function decimals() constant returns (uint8 _decimals) {
+    function decimals() public constant returns (uint8 _decimals) {
       return decimals;
     }
 
-    function totalSupply() constant returns (uint256 _totalSupply) {
+    function totalSupply() public constant returns (uint256 _totalSupply) {
       return totalSupply;
     }
 
