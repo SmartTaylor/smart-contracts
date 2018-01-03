@@ -9,8 +9,11 @@ contract Crowdsale is Ownable {
 
   /**
       EVENTS
+      TODO: remove debug event
   **/
   event Purchase(address indexed buyer, uint256 weiAmount, uint256 tokenAmount);
+  event Debug(uint256 vla);
+
   /**
       CONTRACT VARIABLES
   **/
@@ -20,13 +23,14 @@ contract Crowdsale is Ownable {
   uint256 public startTime;
   uint256 public endTime;
   uint256 public weiRaised;
-  uint256 public TokensSold;
-  uint256 public cap;
+  uint256 public tokensSold;
+  uint256 public tokenCap;
   uint256[4] public rates;
   address public wallet;
 
 
   mapping (address => bool) public whitelisted;
+  mapping (address => uint256) public contributors;
 
   /**
       CONSTRUCTOR
@@ -34,7 +38,8 @@ contract Crowdsale is Ownable {
 
   function Crowdsale(
     uint256 _startTime,
-    uint256 duration,
+    uint256 _duration,
+    uint256 _tokenCap,
     address _token,
     address _wallet)
     public
@@ -46,8 +51,9 @@ contract Crowdsale is Ownable {
     taylorToken = TaylorToken(_token);
 
     startTime = _startTime;
-    endTime = startTime + duration * 1 days ;
+    endTime = startTime + _duration * 1 days ;
     wallet = _wallet;
+    tokenCap = _tokenCap;
     rates = [70000000000000, 79000000000000, 89000000000000, 93000000000000];
   }
 
@@ -63,24 +69,40 @@ contract Crowdsale is Ownable {
   function buyTokens() payable public {
     require(isValidPurchase());
 
-    uint amount = msg.value;
-
-    if(weiRaised.add(amount) > cap){
-      amount = cap.sub(weiRaised);
-    }
-    msg.sender.transfer(msg.value - amount);
-
     uint256 tokens;
-    tokens  = calculateTokenAmount(amount);
+    tokens  = calculateTokenAmount(msg.value);
 
+    /**
+      TODO implement last trasnsaction
+    **/
+    /*if(tokensSold.add(tokens) > tokenCap){
+      tokens = tokenCap.sub(tokensSold);
+    }
+    uint amount = calculateWeiAmount(tokens);
 
+    msg.sender.transfer(msg.value - amount);*/
+    Debug(contributors[msg.sender].add(msg.value));
+    require(contributors[msg.sender].add(msg.value) <= 50 ether);
+
+    contributors[msg.sender] = contributors[msg.sender].add(msg.value);
     taylorToken.transfer(msg.sender, tokens);
 
-    TokensSold = TokensSold.add(tokens);
-    cap = cap.add(amount);
+    tokensSold = tokensSold.add(tokens);
+    weiRaised = weiRaised.add(msg.value);
 
-    forwardFunds();
+    forwardFunds(msg.value);
     Purchase(msg.sender, msg.value, tokens);
+  }
+
+  function addWhitelisted(address[] _addresses)
+    public
+    onlyOwner
+  {
+    for(uint i = 0; i < _addresses.length; i++){
+
+      address add = _addresses[i];
+      whitelisted[add] = true;
+    }
   }
 
   /**
@@ -94,17 +116,31 @@ contract Crowdsale is Ownable {
     return true;
   }
 
-  function forwardFunds() internal {
-    wallet.transfer(msg.value);
+  function forwardFunds(uint256 _amount) internal {
+    wallet.transfer(_amount);
   }
 
   function calculateTokenAmount(uint256 weiAmount) internal returns(uint tokenAmount){
     uint week = getCurrentWeek();
-    return weiAmount.mul(rates[week]);
+    return weiAmount.mul(10**18).div(rates[week]);
+  }
+
+  function calculateWeiAmount(uint256 tokenAmount) internal returns(uint weis){
+    uint week = getCurrentWeek();
+    return tokenAmount.div(rates[week]);
   }
 
   function getCurrentWeek() view internal returns(uint256 _week){
     return (now - startTime) / 1 weeks;
   }
+
+  /**
+      READ ONLY FUNCTIONS
+
+  **/
+  function getCurrentRate() view public returns(uint256 _rate){
+    return rates[getCurrentWeek()];
+  }
+
 
 }

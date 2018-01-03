@@ -20,7 +20,7 @@ contract('Taylor Token', function (accounts) {
 
     it('Total supply initializes correctly', async () => {
       let totalSupply = await token.totalSupply();
-      assert.equal(totalSupply.toNumber(), Math.pow(10,24));
+      assert.equal(totalSupply.toNumber(), Math.pow(10,25));
     });
 
     it('Decimals initializes correctly', async () => {
@@ -28,10 +28,15 @@ contract('Taylor Token', function (accounts) {
       assert.equal(decimals.toNumber(), 18);
     });
 
-    it('Transferable statis initializes correctly', async () => {
+    it('Transferable status initializes correctly', async () => {
       let transferable = await token.transferable();
       assert.isFalse(transferable);
     });
+
+    it('Owner is whitelisted for transfer', async () => {
+      let whitelisted = await token.whitelistedTransfer(owner);
+      assert.isTrue(whitelisted);
+    })
 
   })
 
@@ -45,7 +50,7 @@ contract('Taylor Token', function (accounts) {
 
     it('Should throw if transfer is disabled', async () => {
       return assertInvalidOpcode(async () => {
-        await token.transfer(accounts[1], amount, { from: accounts[0]})
+        await token.transfer(accounts[1], amount, { from: accounts[7]})
       })
     })
 

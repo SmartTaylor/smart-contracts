@@ -19,18 +19,23 @@ contract TaylorToken is Ownable{
     mapping (address => uint256) balances;
     mapping (address => mapping (address => uint256)) allowed;
 
+    //this address can transfer even when transfer is disabled.
+    mapping (address => bool) public whitelistedTransfer;
+
     string public name = "Taylor";
     string public symbol = "TAY";
     uint8 public decimals = 18;
     uint256 constant internal DECIMAL_CASES = 10**18;
-    uint256 public totalSupply = 10**6 * DECIMAL_CASES;
+    uint256 public totalSupply = 10**7 * DECIMAL_CASES;
     bool public transferable = false;
 
     /**
         MODIFIERS
     **/
     modifier onlyWhenTransferable(){
-      require(transferable);
+      if(!whitelistedTransfer[msg.sender]){
+        require(transferable);
+      }
       _;
     }
 
@@ -42,6 +47,7 @@ contract TaylorToken is Ownable{
       public
     {
       balances[owner] = balances[owner].add(totalSupply);
+      whitelistedTransfer[msg.sender] = true;
     }
 
     /**
@@ -53,7 +59,7 @@ contract TaylorToken is Ownable{
     {
       transferable = _transferable;
     }
-
+/*
     function transferFromOwner(address _to, uint256 _value)
       public
       onlyOwner
@@ -66,7 +72,7 @@ contract TaylorToken is Ownable{
       balances[_to] = balances[_to].add(_value);
       Transfer(owner, _to, _value);
       return true;
-    }
+    }*/
 
     function burn(uint256 _amount)
       public
@@ -78,6 +84,13 @@ contract TaylorToken is Ownable{
       totalSupply =  totalSupply.sub(_amount);
       Burn(msg.sender, _amount);
       return true;
+    }
+
+    function addWhitelisted(address _address)
+      public
+      onlyOwner
+    {
+      whitelistedTransfer[_address] = true;
     }
 
     /**
