@@ -59,7 +59,7 @@ contract('TokenVesting', (accounts) => {
 
   it('should linearly release tokens during vesting period', async () => {
     const vestingPeriod = vestDuration - cliff;
-    const checkpoints = 4;
+    const checkpoints = 8;
 
     for (let i = 1; i <= checkpoints; i++) {
       const now = start + cliff + i * (vestingPeriod / checkpoints);

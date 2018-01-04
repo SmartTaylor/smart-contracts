@@ -81,6 +81,7 @@ contract Crowdsale is Ownable {
     uint amount = calculateWeiAmount(tokens);
 
     msg.sender.transfer(msg.value - amount);*/
+
     Debug(contributors[msg.sender].add(msg.value));
     require(contributors[msg.sender].add(msg.value) <= 50 ether);
 
@@ -132,6 +133,11 @@ contract Crowdsale is Ownable {
 
   function getCurrentWeek() view internal returns(uint256 _week){
     return (now - startTime) / 1 weeks;
+  }
+
+  function finalizeSale() {
+
+
   }
 
   /**
