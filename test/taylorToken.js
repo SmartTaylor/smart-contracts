@@ -55,7 +55,7 @@ contract('Taylor Token', function (accounts) {
     })
 
     it('Should transfer correctly', async () => {
-      await token.setTransferable(true, { from: owner})
+      await token.activateTransfers({ from: owner})
       let balance0 = await token.balanceOf(accounts[1]);
       await token.transfer(accounts[1], amount, {from: owner});
       let balance1 = await token.balanceOf(accounts[1]);
@@ -82,7 +82,7 @@ contract('Taylor Token', function (accounts) {
 
     before(async () => {
       token = await TaylorToken.new({from: owner});
-      await token.setTransferable(true, { from: owner})
+      await token.activateTransfers({ from: owner})
 
       await token.transfer(accounts[1], amount, { from: owner})
       await token.transfer(accounts[2], amount, { from: owner})
@@ -139,7 +139,7 @@ contract('Taylor Token', function (accounts) {
 
     before(async() => {
       token = await TaylorToken.new({from: owner});
-      await token.setTransferable(true, { from: owner})
+      await token.activateTransfers({ from: owner})
 
       await token.transfer(accounts[1], amount / 1000, { from: owner})
     })

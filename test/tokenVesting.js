@@ -21,7 +21,7 @@ contract('TokenVesting', (accounts) => {
     cliff = duration.years(1);
     vestDuration = duration.years(2);
     vesting = await TokenVesting.new(beneficiary, token.address, start, cliff, vestDuration, { from: owner })
-    await token.setTransferable(true, { form: owner});
+    await token.activateTransfers({ form: owner});
     await token.transfer(vesting.address, amount,{from: owner});
   });
 
@@ -54,22 +54,7 @@ contract('TokenVesting', (accounts) => {
     const releaseTime = await web3.eth.getBlock(receipt.blockNumber).timestamp;
 
     const balance = await token.balanceOf(beneficiary);
-    assert.equal(balance.toNumber(), amount * (releaseTime - start) / vestDuration)
-  });
-
-  it('should linearly release tokens during vesting period', async () => {
-    const vestingPeriod = vestDuration - cliff;
-    const checkpoints = 8;
-
-    for (let i = 1; i <= checkpoints; i++) {
-      const now = start + cliff + i * (vestingPeriod / checkpoints);
-      await increaseTimeTo(now);
-
-      await vesting.release();
-      const balance = await token.balanceOf(beneficiary);;
-      const expectedVesting = amount * (now - start) / vestDuration;
-      assert.equal((balance.toNumber() / expectedVesting).toFixed(6), 1.000000)
-    }
+    assert.equal(balance.toNumber(), amount / 2)
   });
 
   it('should have released all after end', async () => {

@@ -9,8 +9,8 @@ contract('Crowdsale contract', (accounts) => {
 
   const owner = accounts[0];
   const wallet = accounts[9];
-  const tokensForSale = 7 * Math.pow(10,24);
-  const start = latestTime() + duration.days(1);
+  const tokensForSale = 6535 * Math.pow(10,21);
+  let start = latestTime() + duration.days(1);
   let token, sale = {}
 
   context("Sale initialization", async () => {
@@ -60,7 +60,7 @@ contract('Crowdsale contract', (accounts) => {
     })
 
     it("Has the correct rates", async () => {
-      const realRates = [70000000000000, 79000000000000, 89000000000000, 93000000000000];
+      const realRates = [700000000000000, 790000000000000, 860000000000000, 930000000000000];
       for( var i = 0; i < realRates.length; i++){
         const rate = await sale.rates(i);
         assert.equal(rate, realRates[i]);
@@ -76,14 +76,15 @@ contract('Crowdsale contract', (accounts) => {
 
       token = await TaylorToken.new({from:owner});
       sale = await  Crowdsale.new(start, 30, tokensForSale,token.address, wallet);
-      await token.addWhitelisted(sale.address, { from: owner});
+      await token.addWhitelistedTransfer(sale.address, { from: owner});
+      await token.addWhitelistedBurn(sale.address, { from: owner});
       await token.transfer(sale.address, tokensForSale, {from: owner});
 
     })
 
-    it("Addresses can be whitelisted in batches", async () => {
-      await sale.addWhitelisted(whited, {from: owner});
+    it("Addresses can be whitelisted", async () => {
       for(var i = 0; i < whited.length ; i++){
+        await sale.addWhitelisted(whited[i], false, {from: owner});
         const whitelisted = await sale.whitelisted(whited[i]);
         assert.isTrue(whitelisted);
       }
@@ -102,7 +103,7 @@ contract('Crowdsale contract', (accounts) => {
       const raised = await sale.weiRaised();
       const balance = await token.balanceOf(accounts[1]);
       assert.equal(raised.toNumber(), value);
-      assert.equal(balance.toNumber(), Math.pow(10,18)*value/70000000000000);
+      assert.equal(balance.toNumber(), Math.pow(10,18)*value/700000000000000);
     })
 
     it("Fails if address isn't whitelisted", async () => {
@@ -128,7 +129,7 @@ contract('Crowdsale contract', (accounts) => {
     })
 
     it("Don't let bidder buy more than maximum in multiples transactions", async () => {
-        await sale.addWhitelisted([accounts[7]], {from: owner});
+        await sale.addWhitelisted([accounts[7]], false, {from: owner});
         const value = 2 * Math.pow(10,19);
         return assertInvalidOpcode(async () => {
           for(var i = 0; i < 4; i++ ){
@@ -145,6 +146,44 @@ contract('Crowdsale contract', (accounts) => {
         await sale.buyTokens({from: accounts[4], value: value})
       })
     })
+  })
 
+  context("Finalizing sale", async() => {
+    beforeEach(async () => {
+      start = latestTime() + duration.days(1);
+      token = await TaylorToken.new({from:owner});
+      sale = await  Crowdsale.new(start, 30, tokensForSale / 10 ,token.address, wallet);
+      await token.addWhitelistedTransfer(sale.address, { from: owner});
+      await token.addWhitelistedBurn(sale.address, { from: owner});
+      await token.transfer(sale.address, tokensForSale / 10, {from: owner});
+
+      for(var i = 1; i < accounts.length; i++){
+        await sale.addWhitelisted(accounts[i], true, {from: owner});
+      }
+      await increaseTimeTo(start + duration.minutes(5));
+    })
+
+    it("Finalizes when tokens are sold out", async() => {
+      let tokensBuyed = 0;
+      for(var i = 1; i < 5; i++){
+        await sale.buyTokens({from:accounts[i], value: web3.toWei(95, "ether")})
+        tokensBuyed +=  Math.pow(10,18)*web3.toWei(95, "ether")/700000000000000
+      }
+      let singleBuy = Math.pow(10,18)*web3.toWei(95, "ether")/700000000000000;
+      let sold = await sale.tokensSold();
+      let cap = await sale.tokenCap();
+
+      await sale.buyTokens({from:accounts[9], value: web3.toWei(77.45, "ether")});
+      sold = await sale.tokensSold();
+      cap = await sale.tokenCap();
+      //
+      // console.log("singleBuy", singleBuy / Math.pow(10,18));
+      // console.log(tokensBuyed/ Math.pow(10,18));
+      // console.log("last buy", 95 * (cap - sold) / singleBuy);
+      //
+      // console.log("Final Remaining ", (cap - sold) / Math.pow(10,18));
+      const bal = await token.balanceOf(sale.address);
+      assert.equal(bal.toNumber(), 0)
+    })
   })
 })

@@ -17,10 +17,11 @@ contract("Complex sale sate", (accounts) => {
     //console.log(await latestTime());
     token = await TaylorToken.new({from:owner});
     sale = await Crowdsale.new(start, 30, tokensForSale ,token.address, wallet, {from:owner});
-    await token.addWhitelisted(sale.address, { from: owner});
+    await token.addWhitelistedTransfer(sale.address, { from: owner});
+    await token.addWhitelistedBurn(sale.address, { from: owner});
     await token.transfer(sale.address, tokensForSale, {from: owner});
 
-    await sale.addWhitelisted(accounts, {from: owner});
+    await sale.addWhitelisted(accounts, false, {from: owner});
 
     await increaseTimeTo(start + duration.minutes(5));
 

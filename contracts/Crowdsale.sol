@@ -12,6 +12,7 @@ contract Crowdsale is Ownable {
       TODO: remove debug event
   **/
   event Purchase(address indexed buyer, uint256 weiAmount, uint256 tokenAmount);
+  event Finalized(uint256 tokensSold, uint256 weiAmount);
   event Debug(uint256 vla);
 
   /**
@@ -30,6 +31,7 @@ contract Crowdsale is Ownable {
 
 
   mapping (address => bool) public whitelisted;
+  mapping (address => bool) public whitelistedPools;
   mapping (address => uint256) public contributors;
 
   /**
@@ -54,7 +56,7 @@ contract Crowdsale is Ownable {
     endTime = startTime + _duration * 1 days ;
     wallet = _wallet;
     tokenCap = _tokenCap;
-    rates = [70000000000000, 79000000000000, 89000000000000, 93000000000000];
+    rates = [700000000000000, 790000000000000, 860000000000000, 930000000000000];
   }
 
 
@@ -72,18 +74,11 @@ contract Crowdsale is Ownable {
     uint256 tokens;
     tokens  = calculateTokenAmount(msg.value);
 
-    /**
-      TODO implement last trasnsaction
-    **/
-    /*if(tokensSold.add(tokens) > tokenCap){
-      tokens = tokenCap.sub(tokensSold);
+    if(whitelistedPools[msg.sender]){
+      require(contributors[msg.sender].add(msg.value) <= 250 ether);
+    } else {
+      require(contributors[msg.sender].add(msg.value) <= 50 ether);
     }
-    uint amount = calculateWeiAmount(tokens);
-
-    msg.sender.transfer(msg.value - amount);*/
-
-    Debug(contributors[msg.sender].add(msg.value));
-    require(contributors[msg.sender].add(msg.value) <= 50 ether);
 
     contributors[msg.sender] = contributors[msg.sender].add(msg.value);
     taylorToken.transfer(msg.sender, tokens);
@@ -93,16 +88,20 @@ contract Crowdsale is Ownable {
 
     forwardFunds(msg.value);
     Purchase(msg.sender, msg.value, tokens);
+
+    if(tokenCap - tokensSold < calculateTokenAmount(0.01 ether)){
+      finalizeSale();
+    }
   }
 
-  function addWhitelisted(address[] _addresses)
+  function addWhitelisted(address _address, bool isPool)
     public
     onlyOwner
   {
-    for(uint i = 0; i < _addresses.length; i++){
-
-      address add = _addresses[i];
-      whitelisted[add] = true;
+    if(isPool) {
+      whitelistedPools[_address] = true;
+    } else {
+      whitelisted[_address] = true;
     }
   }
 
@@ -111,9 +110,15 @@ contract Crowdsale is Ownable {
 
   **/
   function isValidPurchase() returns(bool valid) {
-    require(whitelisted[msg.sender]);
-    require(msg.value >= 0.01 ether && msg.value <= 50 ether);
     require(now >= startTime && now <= endTime);
+    require(msg.value >= 0.01 ether);
+    if(whitelistedPools[msg.sender]){
+      require(msg.value <= 250 ether);
+    } else if (whitelisted[msg.sender]){
+      require(msg.value <= 50 ether);
+    } else {
+      return false;
+    }
     return true;
   }
 
@@ -126,18 +131,13 @@ contract Crowdsale is Ownable {
     return weiAmount.mul(10**18).div(rates[week]);
   }
 
-  function calculateWeiAmount(uint256 tokenAmount) internal returns(uint weis){
-    uint week = getCurrentWeek();
-    return tokenAmount.div(rates[week]);
-  }
-
   function getCurrentWeek() view internal returns(uint256 _week){
     return (now - startTime) / 1 weeks;
   }
 
   function finalizeSale() {
-
-
+    taylorToken.burn(taylorToken.balanceOf(this));
+    Finalized(tokensSold, weiRaised);
   }
 
   /**

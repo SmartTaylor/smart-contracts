@@ -1,4 +1,4 @@
-import {increaseTimeTo, duration} from './helpers/increaseTime'
+import {increaseTimeTo, increaseTime, duration} from './helpers/increaseTime'
 import latestTime from './helpers/latestTime'
 
 const TaylorToken = artifacts.require("TaylorToken");
@@ -10,7 +10,7 @@ function calculateTokenAmount(weiAmount, rate) {
 
 
 function getRandomValueInEther(max, min){
-  return Math.floor(Math.random() * (max - min) + min) //* Math.pow(10,18)
+  return Math.floor(Math.random() * (max - min) + min) * Math.pow(10,18)
 }
 
 function generateEmptyMappings(size) {
@@ -27,6 +27,7 @@ async function simulate(accounts, sale){
   //Simulation variables
   var failedTransactions = [];
   var interactionsSnapshots = [];
+  let receipt;
 
 
   //Arrays that smulate mappings from address(position in the accounts array) to any value;
@@ -47,14 +48,13 @@ async function simulate(accounts, sale){
     let snapshot = {
       "iteraction": i,
       "value": value,
-      "week": weel,
+      "week": week,
       "rate": rates[week],
       "sender address": accounts[i],
     };
 
       try{
-          var bid = await sale.buyTokens({from: accounts[i], value: value});
-
+          receipt = await sale.buyTokens({from: accounts[i], value: value});
           contributors[i] = contributors[i] + value;
           weiRaised += value;
           const tokens = calculateTokenAmount(value, rates[week]);
@@ -67,6 +67,8 @@ async function simulate(accounts, sale){
         failedTransactions.push(i);
         snapshot.succeed = false;
       }
+    const timeToAdvance = Math.floor(Math.random() * (3000 - 1) + 1)
+    var time = await increaseTimeTo(lastBlock + duration.minutes(timeToAdvance));
 
     interactionsSnapshots.push(snapshot);
   }
@@ -84,6 +86,30 @@ async function simulate(accounts, sale){
 
 }
 
-contract("Simulation", (accounts) => {
+contract("Simulation", async (accounts) => {
+  const owner = accounts[0];
+  const wallet = accounts[9];
+  const tokensForSale = 7 * Math.pow(10,24);
+  const now = latestTime()
+  const start = now + duration.days(1);
+  let token, sale = {};
 
+  before(async function () {
+
+    token = await TaylorToken.new({from:owner});
+    sale = await Crowdsale.new(start, 30, tokensForSale ,token.address, wallet, {from:owner});
+    await token.addWhitelisted(sale.address, { from: owner});
+    await token.transfer(sale.address, tokensForSale, {from: owner});
+
+    await sale.addWhitelisted(accounts, {from: owner});
+
+    await increaseTimeTo(start + duration.minutes(5));
+
+  })
+
+  it("Sale behaves correctly", async () => {
+    let simulation = await simulate(accounts, sale);
+    console.log(simulation);
+    assert.isTrue(true);
+  })
 })
