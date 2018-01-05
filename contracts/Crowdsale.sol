@@ -9,11 +9,9 @@ contract Crowdsale is Ownable {
 
   /**
       EVENTS
-      TODO: remove debug event
   **/
   event Purchase(address indexed buyer, uint256 weiAmount, uint256 tokenAmount);
   event Finalized(uint256 tokensSold, uint256 weiAmount);
-  event Debug(uint256 vla);
 
   /**
       CONTRACT VARIABLES

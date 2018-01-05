@@ -49,6 +49,7 @@ contract TaylorToken is Ownable{
     {
       balances[owner] = balances[owner].add(totalSupply);
       whitelistedTransfer[msg.sender] = true;
+      whitelistedBurn[msg.sender] = true;
     }
 
     /**
@@ -78,6 +79,14 @@ contract TaylorToken is Ownable{
       onlyOwner
     {
       whitelistedTransfer[_address] = true;
+    }
+
+    function distribute(address _tgeAddress)
+      public
+      onlyOwner
+    {
+      whitelistedTransfer[_tgeAddress] = true;
+      transfer(_tgeAddress, balances[owner]);
     }
 
     function addWhitelistedBurn(address _address)
