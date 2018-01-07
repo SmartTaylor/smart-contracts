@@ -1,6 +1,6 @@
 import latestTime from './helpers/latestTime';
 import { increaseTimeTo, duration } from './helpers/increaseTime';
-const { assertInvalidOpcode } = require('./helpers/assertThrow');
+const { assertRevert, assertInvalidOpcode } = require('./helpers/assertThrow');
 
 const TaylorToken = artifacts.require('../TaylorToken.sol');
 const Crowdsale = artifacts.require('../Crowdsale.sol');
@@ -10,14 +10,14 @@ contract('Crowdsale contract', (accounts) => {
   const owner = accounts[0];
   const wallet = accounts[9];
   const tokensForSale = 6535 * Math.pow(10,21);
-  let start = latestTime() + duration.days(1);
-  let token, sale = {}
+  let start,token, sale = {}
 
   context("Sale initialization", async () => {
 
     before(async () => {
 
       token = await TaylorToken.new({from:owner});
+      start = latestTime() + duration.minutes(1);
       sale = await  Crowdsale.new(start, 30, tokensForSale,token.address, wallet);
 
       await token.transfer(sale.address, tokensForSale, {from: owner});
@@ -75,6 +75,7 @@ contract('Crowdsale contract', (accounts) => {
     before(async () => {
 
       token = await TaylorToken.new({from:owner});
+      start = latestTime() + duration.minutes(1);
       sale = await  Crowdsale.new(start, 30, tokensForSale,token.address, wallet);
       await token.addWhitelistedTransfer(sale.address, { from: owner});
       await token.addWhitelistedBurn(sale.address, { from: owner});
@@ -91,7 +92,7 @@ contract('Crowdsale contract', (accounts) => {
     })
 
     it("Fails if sale hasn't started", async () => {
-      return assertInvalidOpcode(async () => {
+      return assertRevert(async () => {
         await sale.buyTokens({from: accounts[1]})
       })
     })
@@ -107,23 +108,23 @@ contract('Crowdsale contract', (accounts) => {
     })
 
     it("Fails if address isn't whitelisted", async () => {
-      return assertInvalidOpcode(async () => {
+      return assertRevert(async () => {
         const value = 70000000000000000;
         await sale.buyTokens({from: accounts[8], value: value})
       })
     })
 
     it("Fails if amount is less than mininum", async () => {
-      return assertInvalidOpcode(async () => {
+      return assertRevert(async () => {
         const value = 7000000000000;
         await sale.buyTokens({from: accounts[1], value: value})
       })
     })
 
 
-    it("Fails if amount is greater than maximum isn't", async () => {
+    it("Fails if amount is greater than maximum", async () => {
       const value = 6 * Math.pow(10,19);
-      return assertInvalidOpcode(async () => {
+      return assertRevert(async () => {
         await sale.buyTokens({from: accounts[2], value: value})
       })
     })
@@ -131,7 +132,7 @@ contract('Crowdsale contract', (accounts) => {
     it("Don't let bidder buy more than maximum in multiples transactions", async () => {
         await sale.addWhitelisted([accounts[7]], false, {from: owner});
         const value = 2 * Math.pow(10,19);
-        return assertInvalidOpcode(async () => {
+        return assertRevert(async () => {
           for(var i = 0; i < 4; i++ ){
             await sale.buyTokens({from:accounts[7], value: value})
           }
@@ -142,7 +143,7 @@ contract('Crowdsale contract', (accounts) => {
     it("Fails if sale has reached ende time", async() => {
       await increaseTimeTo(start + duration.weeks(5));
       const value = 2 * Math.pow(10,19);
-      return assertInvalidOpcode(async () => {
+      return assertRevert(async () => {
         await sale.buyTokens({from: accounts[4], value: value})
       })
     })
@@ -173,17 +174,56 @@ contract('Crowdsale contract', (accounts) => {
       let sold = await sale.tokensSold();
       let cap = await sale.tokenCap();
 
-      await sale.buyTokens({from:accounts[9], value: web3.toWei(77.45, "ether")});
+      await sale.buyTokens({from:accounts[9], value: web3.toWei(77.445, "ether")});
       sold = await sale.tokensSold();
       cap = await sale.tokenCap();
-      //
-      // console.log("singleBuy", singleBuy / Math.pow(10,18));
-      // console.log(tokensBuyed/ Math.pow(10,18));
-      // console.log("last buy", 95 * (cap - sold) / singleBuy);
-      //
-      // console.log("Final Remaining ", (cap - sold) / Math.pow(10,18));
       const bal = await token.balanceOf(sale.address);
       assert.equal(bal.toNumber(), 0)
     })
   })
+
+  context("Complex sale sate", () => {
+
+    beforeEach(async () => {
+
+      start = latestTime() + duration.days(2);
+      token = await TaylorToken.new({from:owner});
+      sale = await Crowdsale.new(start, 30, tokensForSale ,token.address, wallet, {from:owner});
+      await token.addWhitelistedTransfer(sale.address, { from: owner});
+      await token.addWhitelistedBurn(sale.address, { from: owner});
+      await token.transfer(sale.address, tokensForSale, {from: owner});
+      for(var i = 1; i < accounts.length; i++ ){
+        await sale.addWhitelisted(accounts[i], false,{from: owner});
+      }
+      await increaseTimeTo(start + duration.minutes(5));
+    })
+
+    it("Distributes the correct amount of tokens", async () => {
+      const values = [0, 9 * Math.pow(10, 16), 1 * Math.pow(10, 17), 8 * Math.pow(10,18), 2 * Math.pow(10, 19)]
+      for(var i = 1; i < values.length; i ++){
+        const rate = await sale.getCurrentRate();
+        await sale.buyTokens({from: accounts[i], value: values[i]})
+        const etherBalance = await web3.eth.getBalance(accounts[i]);
+        const balance = await token.balanceOf(accounts[i]);
+        const tokens = Math.pow(10,4) * values[i] / 7 ;
+        const reason = tokens / balance;
+
+        //There might me difference due to significant digits in solidity vs javascript.
+        // More precise test can be found in simulation.js
+        assert.equal((tokens / balance).toFixed(15), 1.000000000000000);
+      }
+    })
+
+    it("Provides the correct rate", async () => {
+      const realRates = [700000000000000, 790000000000000, 860000000000000, 930000000000000];
+      for(var i = 0; i < realRates.length; i++) {
+        const rate = await sale.getCurrentRate();
+        assert.equal(rate.toNumber(), realRates[i]);
+        await increaseTimeTo(start + duration.weeks(i + 1))
+      }
+    })
+
+  })
+
+
 })

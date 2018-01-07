@@ -11,19 +11,19 @@ contract TaylorTokenTGE is Ownable {
   TaylorToken public token;
   bool ready = false;
 
-  uint256 constant FOUNDERS = 10**6 * DECIMAL_CASES;
-  uint256 constant ADVISORS = 4 * 10**5 * DECIMAL_CASES;
-  uint256 constant TEAM = 3 * 10**5 * DECIMAL_CASES;
-  uint256 constant REFERRAL_PROGRAMS = 7 * 10**5 * DECIMAL_CASES;
-  uint256 constant PRESALE = 1065 * 10**3 * DECIMAL_CASES;
-  uint256 constant PUBLICSALE = 6535 * 10**3 * DECIMAL_CASES;
+  uint256 constant public FOUNDERS = 10**6 * DECIMAL_CASES;
+  uint256 constant public ADVISORS = 4 * 10**5 * DECIMAL_CASES;
+  uint256 constant public TEAM = 3 * 10**5 * DECIMAL_CASES;
+  uint256 constant public REFERRAL_PROGRAMS = 7 * 10**5 * DECIMAL_CASES;
+  uint256 constant public PRESALE = 1065 * 10**3 * DECIMAL_CASES;
+  uint256 constant public PUBLICSALE = 6535 * 10**3 * DECIMAL_CASES;
 
-  address founders_address;
-  address advisors_address;
-  address team_address;
-  address referral_address;
-  address presale_address;
-  address publicsale_address;
+  address public founders_address;
+  address public advisors_address;
+  address public team_address;
+  address public referral_address;
+  address public presale_address;
+  address public publicsale_address;
 
   /**
     @dev Sets up alll the addresses needed for the token distribution

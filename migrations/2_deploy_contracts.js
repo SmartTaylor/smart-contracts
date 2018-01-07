@@ -14,14 +14,12 @@ module.exports = function (deployer, network, accounts) {
   // let tokenInstance, saleInstance;
   // const wallet = accounts[1];
   //
-  //
-  //
   // deployer.then(function(){
   //   return TaylorToken.new({from: owner})
   // }).then(function (tkn){
   //   tokenInstance = tkn;
   //   console.log("Before instantiating sale");
-  //     return Crowdsale.new(1515197936, 2, 6535 * Math.pow(10,21), tokenInstance.address, wallet, {from:owner, gas:1500000});
+  //     return Crowdsale.new(1915197936, 2, 6535 * Math.pow(10,21), tokenInstance.address, wallet, {from:owner, gas:1500000});
   //   })
   //   .then(function(crwd){
   //   icoAddress = crwd.address;

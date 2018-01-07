@@ -89,13 +89,11 @@ async function simulate(accounts, sale){
 contract("Simulation", async (accounts) => {
   const owner = accounts[0];
   const wallet = accounts[9];
-  const tokensForSale = 7 * Math.pow(10,24);
-  const now = latestTime()
-  const start = now + duration.days(1);
-  let token, sale = {};
+  const tokensForSale = 7 * Math.pow(10,25);
+  let start,  token, sale = {};
 
   before(async function () {
-
+    start = latestTime() + duration.days(1);
     token = await TaylorToken.new({from:owner});
     sale = await Crowdsale.new(start, 30, tokensForSale ,token.address, wallet, {from:owner});
     await token.addWhitelistedTransfer(sale.address, { from: owner});

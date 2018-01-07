@@ -14,7 +14,6 @@ contract TokenVesting is Ownable {
   using SafeMath for uint256;
 
   event Released(uint256 amount);
-  event Revoked();
 
   // beneficiary of tokens after they are released
   address public beneficiary;

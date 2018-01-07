@@ -1,7 +1,7 @@
 import latestTime from './helpers/latestTime';
 import { increaseTimeTo, duration } from './helpers/increaseTime';
 
-const { assertInvalidOpcode } = require('./helpers/assertThrow');
+const { assertRevert } = require('./helpers/assertThrow');
 const BigNumber = web3.BigNumber;
 
 const TaylorToken = artifacts.require('../TaylorToken.sol');
@@ -26,7 +26,7 @@ contract('TokenVesting', (accounts) => {
   });
 
   it('cannot be released before cliff', async () => {
-    return assertInvalidOpcode(async ()=> {
+    return assertRevert(async ()=> {
       await vesting.release();
     })
   });
