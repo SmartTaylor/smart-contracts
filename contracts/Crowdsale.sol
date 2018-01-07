@@ -3,6 +3,9 @@ pragma solidity 0.4.18;
 import "./Utils/SafeMath.sol";
 import "./TaylorToken.sol";
 
+/**
+  @title Crowdsale
+**/
 contract Crowdsale is Ownable {
 
   using SafeMath for uint256;
@@ -36,6 +39,14 @@ contract Crowdsale is Ownable {
       CONSTRUCTOR
   **/
 
+  /**
+    @dev ICO CONSTRUCTOR
+    @param _startTime uint256 timestamp that the sale will begin
+    @param _duration uint256  how long(in days) the sale will last
+    @param _tokenCap uint256 How many tokens will be sold sale
+    @param _token address the address of the token contract
+    @param _wallet address the address of the wallet that will recieve funds
+  **/
   function Crowdsale(
     uint256 _startTime,
     uint256 _duration,
@@ -62,10 +73,17 @@ contract Crowdsale is Ownable {
       PUBLIC FUNCTIONS
 
   **/
+
+  /**
+    @dev Fallback function that accepts eth and buy tokens
+  **/
   function () payable public {
     buyTokens();
   }
 
+  /**
+    @dev Allows participants to buy tokens
+  **/
   function buyTokens() payable public {
     require(isValidPurchase());
 
@@ -92,6 +110,11 @@ contract Crowdsale is Ownable {
     }
   }
 
+  /**
+    @dev Allows owner to add addresses to the whitelisted
+    @param _address address The address to be added
+    @param isPool bool Indicating if address represents a buying pool
+  **/
   function addWhitelisted(address _address, bool isPool)
     public
     onlyOwner
@@ -107,6 +130,11 @@ contract Crowdsale is Ownable {
       INTERNAL FUNCTIONS
 
   **/
+
+  /**
+    @dev Checks if purchase is valid
+    @return Bool Indicating if purchase is valid
+  **/
   function isValidPurchase() returns(bool valid) {
     require(now >= startTime && now <= endTime);
     require(msg.value >= 0.01 ether);
@@ -120,19 +148,37 @@ contract Crowdsale is Ownable {
     return true;
   }
 
+  /**
+    @dev Internal function that redirects recieved funds to wallet
+    @param _amount uint256 The amount to be fowarded
+  **/
   function forwardFunds(uint256 _amount) internal {
     wallet.transfer(_amount);
   }
 
+  /**
+    @dev Calculates the amount of tokens that buyer will recieve
+    @param weiAmount uint256 The amount, in Wei, that will be bought
+    @return uint256 Representing the amount of tokens that weiAmount buys in
+    the current stage of the sale
+  **/
   function calculateTokenAmount(uint256 weiAmount) internal returns(uint tokenAmount){
     uint week = getCurrentWeek();
     return weiAmount.mul(10**18).div(rates[week]);
   }
 
+  /**
+    @dev Checks the current week in the sale. It's zero indexed, so the first
+    week returns 0, the sencond 1, and so forth.
+    @return Uint representing the current week
+  **/
   function getCurrentWeek() view internal returns(uint256 _week){
     return (now - startTime) / 1 weeks;
   }
 
+  /**
+    @dev Triggers the sale finalizations process
+  **/
   function finalizeSale() {
     taylorToken.burn(taylorToken.balanceOf(this));
     Finalized(tokensSold, weiRaised);
@@ -141,6 +187,10 @@ contract Crowdsale is Ownable {
   /**
       READ ONLY FUNCTIONS
 
+  **/
+
+  /**
+    @dev Give the current rate(in Wei) that buys exactly one token
   **/
   function getCurrentRate() view public returns(uint256 _rate){
     return rates[getCurrentWeek()];

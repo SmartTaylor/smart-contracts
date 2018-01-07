@@ -39,11 +39,11 @@ async function simulate(accounts, sale){
   let tokenCap;
   let startTime;
   let endTime;
-  const rates = [70000000000000, 79000000000000, 89000000000000, 93000000000000];
+  const realRates = [700000000000000, 790000000000000, 860000000000000, 930000000000000];
 
 
   for(var i = 0; i < accounts.length; i++){
-    let week = Math.floor(startTime - Date.now() / week)
+    let week = latestTime() / duration.week;
     let value = getRandomValueInEther(0.1, 50);
     let snapshot = {
       "iteraction": i,
@@ -68,7 +68,7 @@ async function simulate(accounts, sale){
         snapshot.succeed = false;
       }
     const timeToAdvance = Math.floor(Math.random() * (3000 - 1) + 1)
-    var time = await increaseTimeTo(lastBlock + duration.minutes(timeToAdvance));
+    var time = await increaseTimeTo(latestTime() + duration.minutes(timeToAdvance));
 
     interactionsSnapshots.push(snapshot);
   }
@@ -98,10 +98,13 @@ contract("Simulation", async (accounts) => {
 
     token = await TaylorToken.new({from:owner});
     sale = await Crowdsale.new(start, 30, tokensForSale ,token.address, wallet, {from:owner});
-    await token.addWhitelisted(sale.address, { from: owner});
+    await token.addWhitelistedTransfer(sale.address, { from: owner});
     await token.transfer(sale.address, tokensForSale, {from: owner});
 
-    await sale.addWhitelisted(accounts, {from: owner});
+    for(var i = 1; i < accounts.length; i++){
+      await sale.addWhitelisted(accounts[i], false, {from: owner});
+    }
+
 
     await increaseTimeTo(start + duration.minutes(5));
 

@@ -25,6 +25,16 @@ contract TaylorTokenTGE is Ownable {
   address presale_address;
   address publicsale_address;
 
+  /**
+    @dev Sets up alll the addresses needed for the token distribution
+    @param _token address The address of the token that will be distributed
+    @param _founders addresses The address that the founders share will be sent to
+    @param _advisors addresses The address that the advisors share will be sent to
+    @param _team addresses The address that the team share will be sent to
+    @param _referral addresses The address that the referral share will be sent to
+    @param _presale addresses The address that presale share will be sent to
+    @param _publicSale addresses The address that the public sale
+  **/
   function setUp(address _token, address _founders, address _advisors, address _team, address _referral, address _presale, address _publicSale) public onlyOwner{
     token = TaylorToken(_token);
     founders_address = _founders;
@@ -36,6 +46,9 @@ contract TaylorTokenTGE is Ownable {
     ready = true;
   }
 
+  /**
+    @dev Distributes all the tokens belonging to this contract to it's defined destinationss
+  **/
   function distribute() public onlyOwner {
     uint256 total = FOUNDERS.add(ADVISORS).add(TEAM).add(REFERRAL_PROGRAMS).add(PRESALE).add(PUBLICSALE);
     require(total >= token.balanceOf(this));

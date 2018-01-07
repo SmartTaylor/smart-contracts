@@ -3,6 +3,9 @@ pragma solidity 0.4.18;
 import "./Utils/SafeMath.sol";
 import "./Ownable.sol";
 
+/**
+  @title TaylorToken
+**/
 contract TaylorToken is Ownable{
 
     using SafeMath for uint256;
@@ -43,6 +46,10 @@ contract TaylorToken is Ownable{
     /**
         CONSTRUCTOR
     **/
+
+    /**
+      @dev Constructor function executed on contract creation
+    **/
     function TaylorToken()
       Ownable()
       public
@@ -55,6 +62,10 @@ contract TaylorToken is Ownable{
     /**
         OWNER ONLY FUNCTIONS
     **/
+
+    /**
+      @dev Activates the trasfer for all users
+    **/
     function activateTransfers()
       public
       onlyOwner
@@ -62,6 +73,10 @@ contract TaylorToken is Ownable{
       transferable = true;
     }
 
+    /**
+      @dev Allows for msg.sender to burn his on tokens
+      @param _amount uint256 The amount of tokens to be burned
+    **/
     function burn(uint256 _amount)
       public
       returns (bool success)
@@ -74,6 +89,11 @@ contract TaylorToken is Ownable{
       return true;
     }
 
+    /**
+      @dev Allows the owner to add addresse that can bypass the
+      transfer lock. Eg: ICO contract, TGE contract.
+      @param _address address Address to be added
+    **/
     function addWhitelistedTransfer(address _address)
       public
       onlyOwner
@@ -81,6 +101,12 @@ contract TaylorToken is Ownable{
       whitelistedTransfer[_address] = true;
     }
 
+    /**
+      @dev Sends all avaible TAY to the TGE contract to be properly
+      distribute
+      @param _tgeAddress address Address of the token distribution
+      contract
+    **/
     function distribute(address _tgeAddress)
       public
       onlyOwner
@@ -89,6 +115,12 @@ contract TaylorToken is Ownable{
       transfer(_tgeAddress, balances[owner]);
     }
 
+
+    /**
+      @dev Allows the owner to add addresse that can burn tokens
+      Eg: ICO contract, TGE contract.
+      @param _address address Address to be added
+    **/
     function addWhitelistedBurn(address _address)
       public
       onlyOwner
@@ -99,20 +131,32 @@ contract TaylorToken is Ownable{
     /**
         PUBLIC FUNCTIONS
     **/
+
+    /**
+    * @dev transfer token for a specified address
+    * @param _to The address to transfer to.
+    * @param _value The amount to be transferred.
+    */
     function transfer(address _to, uint256 _value)
       public
       onlyWhenTransferable
       returns (bool success)
     {
-          require(_to != address(0));
-          require(_value <= balances[msg.sender]);
+      require(_to != address(0));
+      require(_value <= balances[msg.sender]);
 
-          balances[msg.sender] = balances[msg.sender].sub(_value);
-          balances[_to] = balances[_to].add(_value);
-          Transfer(msg.sender, _to, _value);
-          return true;
+      balances[msg.sender] = balances[msg.sender].sub(_value);
+      balances[_to] = balances[_to].add(_value);
+      Transfer(msg.sender, _to, _value);
+      return true;
     }
 
+    /**
+   * @dev Transfer tokens from one address to another
+   * @param _from address The address which you want to send tokens from
+   * @param _to address The address which you want to transfer to
+   * @param _value uint256 the amount of tokens to be transferred
+   */
     function transferFrom
       (address _from,
         address _to,
@@ -131,6 +175,14 @@ contract TaylorToken is Ownable{
       return true;
     }
 
+    /**
+   * @dev Approve the passed address to spend the specified amount of tokens on behalf of msg.sender.
+    For security reasons, if one need to change the value from a existing allowance, it must furst sets
+    it to zero and then sets the new value
+
+   * @param _spender The address which will spend the funds.
+   * @param _value The amount of tokens to be spent.
+   */
     function approve(address _spender, uint256 _value)
       public
       onlyWhenTransferable
@@ -149,10 +201,22 @@ contract TaylorToken is Ownable{
     /**
         CONSTANT FUNCTIONS
     **/
+
+    /**
+    * @dev Gets the balance of the specified address.
+    * @param _owner The address to query the the balance of.
+    * @return An uint256 representing the amount owned by the passed address.
+    */
     function balanceOf(address _owner) view public returns (uint256 balance) {
         return balances[_owner];
     }
 
+    /**
+   * @dev Function to check the amount of tokens that an owner allowed to a spender.
+   * @param _owner address The address which owns the funds.
+   * @param _spender address The address which will spend the funds.
+   * @return A uint256 specifying the amount of tokens still available for the spender.
+   */
     function allowance(address _owner, address _spender)
       view
       public
@@ -161,10 +225,16 @@ contract TaylorToken is Ownable{
       return allowed[_owner][_spender];
     }
 
+    /**
+      @dev function that returns the token decimal cases
+    **/
     function decimals() public constant returns (uint8 _decimals) {
       return decimals;
     }
 
+    /**
+      @dev Returns the total supply of existing tokens
+    **/
     function totalSupply() public constant returns (uint256 _totalSupply) {
       return totalSupply;
     }
