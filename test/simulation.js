@@ -25,40 +25,45 @@ function generateEmptyMappings(size) {
 async function simulate(accounts, sale){
 
   //Simulation variables
-  var failedTransactions = [];
-  var interactionsSnapshots = [];
+  let failedTransactions = [];
+  let interactionsSnapshots = [];
   let receipt;
 
 
   //Arrays that smulate mappings from address(position in the accounts array) to any value;
-  var contributors = generateEmptyMappings(accounts.length);
+  var contributors =  generateEmptyMappings(accounts.length);
+  let tokenBalances = generateEmptyMappings(accounts.length);
 
   //Sim of UINTs
-  let weiRaised;
-  let tokensSold;
-  let tokenCap;
-  let startTime;
-  let endTime;
+  let weiRaised = 0;
+  let tokensSold = 0;
+  let tokenCap = await sale.tokenCap();
+  let startTime = await sale.startTime();
+  let endTime = 0;
   const realRates = [700000000000000, 790000000000000, 860000000000000, 930000000000000];
 
-
-  for(var i = 0; i < accounts.length; i++){
-    let week = latestTime() / duration.week;
+  for(var i = 2; i < accounts.length; i++){
+    let week = Math.floor((latestTime() - startTime) / duration.weeks(1));
     let value = getRandomValueInEther(0.1, 50);
     let snapshot = {
       "iteraction": i,
       "value": value,
       "week": week,
-      "rate": rates[week],
+      "rate": realRates[week],
       "sender address": accounts[i],
     };
+      if(week > 4){
+        console.log("Finalized by time");
+        break;
+      }
 
       try{
           receipt = await sale.buyTokens({from: accounts[i], value: value});
           contributors[i] = contributors[i] + value;
           weiRaised += value;
-          const tokens = calculateTokenAmount(value, rates[week]);
+          const tokens = calculateTokenAmount(value, realRates[week]);
           tokensSold += tokens
+          tokenBalances[i] = tokens;
 
           snapshot.succeed = true;
       }
@@ -67,9 +72,12 @@ async function simulate(accounts, sale){
         failedTransactions.push(i);
         snapshot.succeed = false;
       }
-    const timeToAdvance = Math.floor(Math.random() * (3000 - 1) + 1)
-    var time = await increaseTimeTo(latestTime() + duration.minutes(timeToAdvance));
-
+    // const timeToAdvance = Math.floor(Math.random() * (300 - 1) + 1)
+    // var time = await increaseTimeTo(latestTime() + duration.minutes(timeToAdvance));
+    if(tokenCap - tokensSold < calculateTokenAmount(web3.toWei(0.9, "ether"),realRates[week])){
+      console.log("Reached the cap");
+      break;
+    }
     interactionsSnapshots.push(snapshot);
   }
 
@@ -79,6 +87,7 @@ async function simulate(accounts, sale){
     "contributors": contributors,
     "startTime": startTime,
     "endTime": endTime,
+    "tokenBalances": tokenBalances,
     "failedTransactions": failedTransactions,
     "interactionsSnapshots": interactionsSnapshots,
   }
@@ -88,9 +97,9 @@ async function simulate(accounts, sale){
 
 contract("Simulation", async (accounts) => {
   const owner = accounts[0];
-  const wallet = accounts[9];
-  const tokensForSale = 7 * Math.pow(10,25);
-  let start,  token, sale = {};
+  const wallet = accounts[1];
+  const tokensForSale = 6535 * Math.pow(10,21);
+  let start,  token, sale, simulation, walletBalance = {};
 
   before(async function () {
     start = latestTime() + duration.days(1);
@@ -103,14 +112,34 @@ contract("Simulation", async (accounts) => {
       await sale.addWhitelisted(accounts[i], false, {from: owner});
     }
 
-
+    walletBalance = await web3.eth.getBalance(wallet);
     await increaseTimeTo(start + duration.minutes(5));
-
+    simulation = await simulate(accounts, sale);
+    console.log(simulation.contributors);
+    console.log(simulation.tokensSold);
+    console.log(simulation.tokenBalances);
+    console.log(simulation.failedTransactions);
   })
 
   it("Sale behaves correctly", async () => {
-    let simulation = await simulate(accounts, sale);
-    console.log(simulation);
     assert.isTrue(true);
+  })
+
+  it("Buyers got correct amount of tokens", async () => {
+    for(var i = 1; i < accounts.length; i++){
+      const weiAmount = simulation.contributors[i];
+      const balance = await token.balanceOf(accounts[i]);
+      assert.equal(((balance.toNumber() + 1) / (simulation.tokenBalances[i] + 1)).toFixed(14),1.00000000000000 );
+    }
+  })
+
+  it("Sale raised the correct amount of money", async () => {
+    const raised = simulation.weiRaised;
+    const walletBal = await web3.eth.getBalance(wallet);
+    assert.equal((raised / walletBal.toNumber() - walletBalance.toNumber()).toFixed(14),1.000000000000000);
+  })
+
+  it("accounts correctly for tokens", async () => {
+    console.log(simulation.tokensSold / Math.pow(10,18));
   })
 })
