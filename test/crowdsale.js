@@ -19,7 +19,6 @@ contract('Crowdsale contract', (accounts) => {
       token = await TaylorToken.new({from:owner});
       start = latestTime() + duration.minutes(1);
       sale = await  Crowdsale.new(start, 30, tokensForSale,token.address, wallet);
-
       await token.transfer(sale.address, tokensForSale, {from: owner});
 
     })

@@ -56,7 +56,7 @@ module.exports = function (deployer, network, accounts) {
     })
     .then(function(response){
       console.log("Token Address: ", tokenInstance.address);
-      console.log("Token ABI: ", tokenInstance.abi);
+      console.log("Token ABI: ", tokenInstance.options);
       console.log("Sale address: ", saleInstance.address);
       console.log("Sale ABI: ", saleInstance.abi);
       console.log("TGE Address: ", tgeInstance.address);
