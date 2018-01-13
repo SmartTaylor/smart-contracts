@@ -99,7 +99,7 @@ contract("Simulation", async (accounts) => {
   const owner = accounts[0];
   const wallet = accounts[1];
   const tokensForSale = 6535 * Math.pow(10,21);
-  let start,  token, sale, simulation, walletBalance = {};
+  let start, token, sale, simulation, walletBalance = {};
 
   before(async function () {
     start = latestTime() + duration.days(1);

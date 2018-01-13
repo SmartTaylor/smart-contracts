@@ -172,8 +172,8 @@ contract('Crowdsale contract', (accounts) => {
       let singleBuy = Math.pow(10,18)*web3.toWei(95, "ether")/700000000000000;
       let sold = await sale.tokensSold();
       let cap = await sale.tokenCap();
-
-      await sale.buyTokens({from:accounts[9], value: web3.toWei(77.445, "ether")});
+      const bal9 = await web3.eth.getBalance(accounts[i]);
+      await sale.buyTokens({from:accounts[9], value: web3.toWei(80, "ether")});
       sold = await sale.tokensSold();
       cap = await sale.tokenCap();
       const bal = await token.balanceOf(sale.address);
@@ -198,7 +198,7 @@ contract('Crowdsale contract', (accounts) => {
     })
 
     it("Distributes the correct amount of tokens", async () => {
-      const values = [0, 9 * Math.pow(10, 16), 1 * Math.pow(10, 17), 8 * Math.pow(10,18), 2 * Math.pow(10, 19)]
+      const values = [0, 9 * Math.pow(10, 16), 1 * Math.pow(10, 17), 3 * Math.pow(10,18), 2 * Math.pow(10, 19)]
       for(var i = 1; i < values.length; i ++){
         const rate = await sale.getCurrentRate();
         await sale.buyTokens({from: accounts[i], value: values[i]})

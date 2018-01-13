@@ -15,7 +15,7 @@ contract Crowdsale is Ownable {
   **/
   event Purchase(address indexed buyer, uint256 weiAmount, uint256 tokenAmount);
   event Finalized(uint256 tokensSold, uint256 weiAmount);
-
+  event Debug(uint256 value);
   /**
       CONTRACT VARIABLES
   **/
@@ -96,14 +96,25 @@ contract Crowdsale is Ownable {
       require(contributors[msg.sender].add(msg.value) <= 50 ether);
     }
 
-    contributors[msg.sender] = contributors[msg.sender].add(msg.value);
+    uint tokenPool = tokensSold.add(tokens);
+    uint change;
+    if(tokenPool > tokenCap){
+      Debug(0);
+      uint256 possibleTokens = tokenCap.sub(tokensSold);
+      change = calculatePriceForTokens(tokens.sub(possibleTokens));
+      msg.sender.transfer(change);
+      tokens = possibleTokens;
+    }
+    uint256 amount = msg.value.sub(change);
+
+    contributors[msg.sender] = contributors[msg.sender].add(amount);
     taylorToken.transfer(msg.sender, tokens);
 
     tokensSold = tokensSold.add(tokens);
-    weiRaised = weiRaised.add(msg.value);
+    weiRaised = weiRaised.add(amount);
 
-    forwardFunds(msg.value);
-    Purchase(msg.sender, msg.value, tokens);
+    forwardFunds(amount);
+    Purchase(msg.sender, amount, tokens);
 
     if(tokenCap - tokensSold < calculateTokenAmount(0.01 ether)){
       finalizeSale();
@@ -135,7 +146,7 @@ contract Crowdsale is Ownable {
     @dev Checks if purchase is valid
     @return Bool Indicating if purchase is valid
   **/
-  function isValidPurchase() returns(bool valid) {
+  function isValidPurchase() view internal returns(bool valid) {
     require(now >= startTime && now <= endTime);
     require(msg.value >= 0.01 ether);
     if(whitelistedPools[msg.sender]){
@@ -162,9 +173,19 @@ contract Crowdsale is Ownable {
     @return uint256 Representing the amount of tokens that weiAmount buys in
     the current stage of the sale
   **/
-  function calculateTokenAmount(uint256 weiAmount) internal returns(uint tokenAmount){
+  function calculateTokenAmount(uint256 weiAmount) view internal returns(uint256 tokenAmount){
     uint week = getCurrentWeek();
     return weiAmount.mul(10**18).div(rates[week]);
+  }
+
+  /**
+    @dev Calculates wei cost of specific amount of tokens
+    @param tokenAmount uint256 The amount of tokens to be calculated
+    @return uint256 Representing the total cost, in wei, for tokenAmount
+  **/
+  function calculatePriceForTokens(uint256 tokenAmount) view internal returns(uint256 weiAmount){
+    uint256 week = getCurrentWeek();
+    return tokenAmount.div(10**18).mul(rates[week]);
   }
 
   /**
@@ -173,13 +194,17 @@ contract Crowdsale is Ownable {
     @return Uint representing the current week
   **/
   function getCurrentWeek() view internal returns(uint256 _week){
-    return (now - startTime) / 1 weeks;
+    uint256 week = (now - startTime) / 1 weeks;
+    if(week > 3){
+      week = 3;
+    }
+    return week;
   }
 
   /**
     @dev Triggers the sale finalizations process
   **/
-  function finalizeSale() {
+  function finalizeSale() internal {
     taylorToken.burn(taylorToken.balanceOf(this));
     Finalized(tokensSold, weiRaised);
   }

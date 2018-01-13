@@ -2,7 +2,7 @@ var HDWalletProvider = require("truffle-hdwallet-provider");
 require('babel-register');
 require('babel-polyfill');
 
-
+var mnemonic = "yard innocent emerge olympic cactus inject aspect improve purse film hospital brown"
 
 module.exports = {
 
@@ -13,15 +13,15 @@ module.exports = {
       network_id: "*" // Match any network id
     },
     ganache: {
-      host: "localhost",
+      host: '10.212.2.185',
       port: 7545,
-      network_id: 5777
+      network_id: "*"
     },
     rinkeby: {
-      provider: function() {
-        return new HDWalletProvider(mnemonic, "https://rinkeby.infura.io/v6vrKrBH3skxXBJnmIwr")
-      },
-      network_id: 4
+      host: "localhost",
+      port: 8545,
+      network_id: "4",
+      from: "0x23558831583604d63a12022e7a26fc1ed225a8f7",
     },
   }
 };
