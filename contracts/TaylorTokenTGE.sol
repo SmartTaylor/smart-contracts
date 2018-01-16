@@ -15,8 +15,8 @@ contract TaylorTokenTGE is Ownable {
   uint256 constant public ADVISORS = 4 * 10**5 * DECIMAL_CASES;
   uint256 constant public TEAM = 3 * 10**5 * DECIMAL_CASES;
   uint256 constant public REFERRAL_PROGRAMS = 7 * 10**5 * DECIMAL_CASES;
-  uint256 constant public PRESALE = 1065 * 10**3 * DECIMAL_CASES;
-  uint256 constant public PUBLICSALE = 6535 * 10**3 * DECIMAL_CASES;
+  uint256 constant public PRESALE = 1190476 * DECIMAL_CASES;
+  uint256 constant public PUBLICSALE = 6409524 * DECIMAL_CASES;
 
   address public founders_address;
   address public advisors_address;
