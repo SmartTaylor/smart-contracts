@@ -213,6 +213,36 @@ contract('Crowdsale contract', (accounts) => {
       }
     })
 
+    it("Distribute correct amount of tokens for pools", async () => {
+      const values = 2 * Math.pow(10, 20);
+      await sale.addWhitelisted(accounts[8], true ,{from: owner});
+        const rate = await sale.getCurrentRate();
+        await sale.buyTokens({from: accounts[8], value: values})
+        const etherBalance = await web3.eth.getBalance(accounts[8]);
+        const balance = await token.balanceOf(accounts[8]);
+        const tokens = Math.pow(10,4) * values / 6 ;
+        const reason = tokens / balance;
+
+        //There might me difference due to significant digits in solidity vs javascript.
+        // More precise test can be found in simulation.js
+        assert.equal((tokens / balance).toFixed(15), 1.000000000000000);
+    })
+
+    it("Cap total amount that pools can buy", async () => {
+      const value = 2.4 * Math.pow(10, 20);
+      let purchases = [];
+      for(var i = 1; i < 7; i++){
+        const balance1 = await web3.eth.getBalance(accounts[i]);
+        await sale.addWhitelisted(accounts[i], true ,{from: owner});
+        await sale.buyTokens({from: accounts[i], value: value});
+        const balance2 = await web3.eth.getBalance(accounts[i]);
+        purchases.push(balance1.toNumber() - balance2.toNumber());
+      }
+      const total = await sale.poolEthSold();
+      const cap = await sale.poolEthCap();
+      assert.equal(cap.toNumber(), total.toNumber());
+    })
+
     it("Provides the correct rate", async () => {
       const realRates = [700000000000000, 790000000000000, 860000000000000, 930000000000000];
       for(var i = 0; i < realRates.length; i++) {
