@@ -57,7 +57,7 @@ contract Crowdsale is Ownable {
     address _wallet)
     public
   {
-    //require(_startTime >= now);
+    require(_startTime >= now);
     require(_token != address(0));
     require(_wallet != address(0));
 
