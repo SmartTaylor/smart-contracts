@@ -57,7 +57,7 @@ contract Crowdsale is Ownable {
     address _wallet)
     public
   {
-    require(_startTime >= now);
+    //require(_startTime >= now);
     require(_token != address(0));
     require(_wallet != address(0));
 
@@ -168,9 +168,10 @@ contract Crowdsale is Ownable {
   function isValidPurchase() view internal returns(bool valid) {
     require(now >= startTime && now <= endTime);
     require(msg.value >= 0.01 ether);
-    if(whitelistedPools[msg.sender]){
+    uint256 week = getCurrentWeek();
+    if(whitelistedPools[msg.sender] && week == 0){
       require(msg.value <= 250 ether);
-    } else if (whitelisted[msg.sender]){
+    } else if (whitelisted[msg.sender] || whitelistedPools[msg.sender]){
       require(msg.value <= 50 ether);
     } else {
       return false;
