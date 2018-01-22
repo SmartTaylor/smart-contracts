@@ -74,22 +74,6 @@ contract TaylorToken is Ownable{
     }
 
     /**
-      @dev Allows for msg.sender to burn his on tokens
-      @param _amount uint256 The amount of tokens to be burned
-    **/
-    function burn(uint256 _amount)
-      public
-      returns (bool success)
-    {
-      require(whitelistedBurn[msg.sender]);
-      require(_amount <= balances[msg.sender]);
-      balances[msg.sender] = balances[msg.sender].sub(_amount);
-      totalSupply =  totalSupply.sub(_amount);
-      Burn(msg.sender, _amount);
-      return true;
-    }
-
-    /**
       @dev Allows the owner to add addresse that can bypass the
       transfer lock. Eg: ICO contract, TGE contract.
       @param _address address Address to be added
@@ -197,6 +181,22 @@ contract TaylorToken is Ownable{
         return true;
     }
 
+    /**
+      @dev Allows for msg.sender to burn his on tokens
+      @param _amount uint256 The amount of tokens to be burned
+    **/
+    function burn(uint256 _amount)
+      public
+      returns (bool success)
+    {
+      require(whitelistedBurn[msg.sender]);
+      require(_amount <= balances[msg.sender]);
+      balances[msg.sender] = balances[msg.sender].sub(_amount);
+      totalSupply =  totalSupply.sub(_amount);
+      Burn(msg.sender, _amount);
+      return true;
+    }
+
 
     /**
         CONSTANT FUNCTIONS
@@ -223,20 +223,6 @@ contract TaylorToken is Ownable{
       returns (uint256 remaining)
     {
       return allowed[_owner][_spender];
-    }
-
-    /**
-      @dev function that returns the token decimal cases
-    **/
-    function decimals() public constant returns (uint8 _decimals) {
-      return decimals;
-    }
-
-    /**
-      @dev Returns the total supply of existing tokens
-    **/
-    function totalSupply() public constant returns (uint256 _totalSupply) {
-      return totalSupply;
     }
 
 }

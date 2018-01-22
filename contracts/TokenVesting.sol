@@ -7,8 +7,7 @@ import './Utils/SafeMath.sol';
 /**
  * @title TokenVesting
  * @dev A token holder contract that can release its token balance gradually like a
- * typical vesting scheme, with a cliff and vesting period. Optionally revocable by the
- * owner.
+ * typical vesting scheme, with a cliff and vesting period.
  */
 contract TokenVesting is Ownable {
   using SafeMath for uint256;

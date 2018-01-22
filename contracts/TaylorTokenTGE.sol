@@ -9,7 +9,6 @@ contract TaylorTokenTGE is Ownable {
 
   uint256 constant internal DECIMAL_CASES = 10**18;
   TaylorToken public token;
-  bool ready = false;
 
   uint256 constant public FOUNDERS = 10**6 * DECIMAL_CASES;
   uint256 constant public ADVISORS = 4 * 10**5 * DECIMAL_CASES;
@@ -43,7 +42,6 @@ contract TaylorTokenTGE is Ownable {
     referral_address = _referral;
     presale_address = _presale;
     publicsale_address = _publicSale;
-    ready = true;
   }
 
   /**
