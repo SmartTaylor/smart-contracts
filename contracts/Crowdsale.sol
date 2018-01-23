@@ -5,6 +5,7 @@ import "./TaylorToken.sol";
 
 /**
   @title Crowdsale
+
 **/
 contract Crowdsale is Ownable {
 

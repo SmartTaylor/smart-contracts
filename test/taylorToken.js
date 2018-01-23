@@ -106,22 +106,24 @@ contract('Taylor Token', function (accounts) {
       assert.equal(balance1.toNumber(), balance3.toNumber() - amount / 4);
     });
 
-    it("Shouldn't allow changing existing allowance for non zero value", async () => {
-      return assertRevert(async () => {
-        await token.approve(accounts[2], amount / 2, {from: accounts[1]});
-      })
+    it("Should safely increase approval using increaseApproval function", async () => {
+      const app = await token.allowance(accounts[1], accounts[2]);
+      await token.increaseApproval(accounts[2], amount / 4, {from: accounts[1]});
+      const app2 = await token.allowance(accounts[1], accounts[2]);
+      assert.equal(app.toNumber() + amount / 4, app2.toNumber());
     })
 
-    it("Should allow changing existing allowance for zero value", async () => {
-      await token.approve(accounts[2], 0, {from: accounts[1]})
-      const allowance = await token.allowance(accounts[1], accounts[2]);
-      assert.equal(allowance, 0);
+    it("Should safely decrease approval using decreaseApproval function", async () => {
+      const app = await token.allowance(accounts[1], accounts[2]);
+      await token.decreaseApproval(accounts[2], amount / 4, {from: accounts[1]});
+      const app2 = await token.allowance(accounts[1], accounts[2]);
+      assert.equal(app.toNumber() - amount / 4, app2.toNumber());
     })
 
     it("Shouldn't transfer more than allowed", async () =>  {
       const allowance = await token.allowance(accounts[1], accounts[2]);
       return assertRevert(async () => {
-        await token.transferFrom(accounts[1], accounts[6], allowance.toNumber() + 1, {from: accounts[2]});
+        await token.transferFrom(accounts[1], accounts[6], allowance.toNumber() + 1000, {from: accounts[2]});
       })
     })
 
