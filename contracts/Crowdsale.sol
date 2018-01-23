@@ -28,12 +28,13 @@ pragma solidity 0.4.18;
 
 import "./Utils/SafeMath.sol";
 import "./TaylorToken.sol";
+import "./Pausable.sol";
 
 /**
   @title Crowdsale
 
 **/
-contract Crowdsale is Ownable {
+contract Crowdsale is Ownable, Pausable {
 
   using SafeMath for uint256;
 
@@ -116,14 +117,14 @@ contract Crowdsale is Ownable {
   /**
     @dev Fallback function that accepts eth and buy tokens
   **/
-  function () payable public {
+  function () payable whenNotPaused public {
     buyTokens();
   }
 
   /**
     @dev Allows participants to buy tokens
   **/
-  function buyTokens() payable public {
+  function buyTokens() payable whenNotPaused public {
     require(isValidPurchase());
 
     uint256 tokens;
@@ -177,6 +178,7 @@ contract Crowdsale is Ownable {
   function addWhitelisted(address _address, bool isPool)
     public
     onlyOwner
+    whenNotPaused
   {
     if(isPool) {
       whitelistedPools[_address] = true;
@@ -188,7 +190,7 @@ contract Crowdsale is Ownable {
   /**
     @dev Triggers the finalization process
   **/
-  function endSale() public {
+  function endSale() whenNotPaused public {
     require(finalized ==  false);
     require(now > endTime);
     finalized = true;

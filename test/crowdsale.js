@@ -138,6 +138,23 @@ contract('Crowdsale contract', (accounts) => {
         })
     })
 
+    it("Fails if sale is paused", async () => {
+      const value = 70000000000000000;
+      await sale.pause({from: owner});
+      return assertRevert(async () => {
+        await sale.buyTokens({from:accounts[5], value: value})
+      })
+    })
+
+    it("Allows if sale is unpaused", async () => {
+      const value = 70000000000000000;
+      await sale.unpause({from: owner});
+      const raised = await sale.weiRaised();
+      await sale.buyTokens({from: accounts[5], value: value})
+      const raised2 = await sale.weiRaised();
+      assert.equal(raised2.toNumber() - value, raised.toNumber());
+    })
+
     it("Pools can buy up to 250ETH in tokens in the first week", async () =>{
       await sale.addWhitelisted(accounts[8], true, { from: owner});
       const value = 2.4 * Math.pow(10,20);
