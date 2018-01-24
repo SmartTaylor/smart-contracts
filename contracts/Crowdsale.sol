@@ -133,6 +133,7 @@ contract Crowdsale is Ownable, Pausable {
 
     if(whitelistedPools[msg.sender] && poolEthSold.add(amount) > poolEthCap){
       uint256 validAmount = poolEthCap.sub(poolEthSold);
+      require(validAmount > 0);
       uint256 ch = amount.sub(validAmount);
       msg.sender.transfer(ch);
       amount = validAmount;
@@ -194,8 +195,7 @@ contract Crowdsale is Ownable, Pausable {
     require(finalized ==  false);
     require(now > endTime);
     finalized = true;
-    taylorToken.burn(taylorToken.balanceOf(this));
-    Finalized(tokensSold, weiRaised);
+    finalizeSale();
   }
 
   /**
