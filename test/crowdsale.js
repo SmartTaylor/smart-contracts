@@ -155,6 +155,14 @@ contract('Crowdsale contract', (accounts) => {
       assert.equal(raised2.toNumber() - value, raised.toNumber());
     })
 
+    it("Pools can't but less than 1000 ETH in the first week", async () => {
+      await sale.addWhitelisted(accounts[9], true, { from: owner});
+      const value = 9 * Math.pow(10,19);
+      return assertRevert(async () => {
+        await sale.buyTokens({from: accounts[9], value: value})
+      })
+    })
+
     it("Pools can buy up to 250ETH in tokens in the first week", async () =>{
       await sale.addWhitelisted(accounts[8], true, { from: owner});
       const value = 2.4 * Math.pow(10,20);
@@ -185,30 +193,33 @@ contract('Crowdsale contract', (accounts) => {
 
   context("Finalizing sale", async() => {
     beforeEach(async () => {
+      const saleTokens = 1100 * Math.pow(10,21)
       start = latestTime() + duration.days(1);
       token = await TaylorToken.new({from:owner});
-      sale = await  Crowdsale.new(start, 30, tokensForSale / 10 ,token.address, wallet);
+      sale = await  Crowdsale.new(start, 30, saleTokens ,token.address, wallet);
       await token.addWhitelistedTransfer(sale.address, { from: owner});
       await token.addWhitelistedBurn(sale.address, { from: owner});
-      await token.transfer(sale.address, tokensForSale / 10, {from: owner});
+      await token.transfer(sale.address, saleTokens, {from: owner});
 
       for(var i = 1; i < accounts.length; i++){
         await sale.addWhitelisted(accounts[i], true, {from: owner});
       }
       await increaseTimeTo(start + duration.minutes(5));
+      //console.log(saleTokens);
     })
 
     it("Finalizes when tokens are sold out", async() => {
       let tokensBuyed = 0;
+
       for(var i = 1; i < 5; i++){
-        await sale.buyTokens({from:accounts[i], value: web3.toWei(95, "ether")})
-        tokensBuyed +=  Math.pow(10,18)*web3.toWei(95, "ether")/700000000000000
+        await sale.buyTokens({from:accounts[i], value: web3.toWei(150, "ether")})
+        tokensBuyed +=  Math.pow(10,18)*web3.toWei(150, "ether")/600000000000000
       }
-      let singleBuy = Math.pow(10,18)*web3.toWei(95, "ether")/700000000000000;
+      let singleBuy = Math.pow(10,18)*web3.toWei(150, "ether")/600000000000000;
       let sold = await sale.tokensSold();
       let cap = await sale.tokenCap();
       const bal9 = await web3.eth.getBalance(accounts[i]);
-      await sale.buyTokens({from:accounts[9], value: web3.toWei(80, "ether")});
+      await sale.buyTokens({from:accounts[6], value: web3.toWei(150, "ether")});
       sold = await sale.tokensSold();
       cap = await sale.tokenCap();
       const bal = await token.balanceOf(sale.address);

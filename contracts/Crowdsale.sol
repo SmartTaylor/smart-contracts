@@ -68,6 +68,7 @@ contract Crowdsale is Ownable, Pausable {
       PUBLIC CONSTANTS
   **/
   uint256 public constant poolEthCap = 1250 ether;
+  uint256 public constant minimumPoolPurchase = 100 ether;
   uint256 public constant minimumPurchase = 0.01 ether;
   uint256 public constant maximumPoolPurchase = 250 ether;
   uint256 public constant maximumPurchase = 50 ether;
@@ -212,6 +213,7 @@ contract Crowdsale is Ownable, Pausable {
     require(msg.value >= minimumPurchase);
     uint256 week = getCurrentWeek();
     if(week == 0 && whitelistedPools[msg.sender]){
+      require(msg.value >= minimumPoolPurchase);
       require(contributors[msg.sender].add(msg.value) <= maximumPoolPurchase);
     } else {
       require(whitelisted[msg.sender] || whitelistedPools[msg.sender]);

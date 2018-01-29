@@ -103,8 +103,8 @@ contract("Simulation", async (accounts) => {
 
   before(async function () {
     start = latestTime() + duration.years(1);
-    console.log(start);
-    console.log(latestTime());
+    //console.log(start);
+    //console.log(latestTime());
     token = await TaylorToken.new({from:owner});
     sale = await Crowdsale.new(start, 30, tokensForSale ,token.address, wallet, {from:owner});
     await token.addWhitelistedTransfer(sale.address, { from: owner});
