@@ -195,7 +195,6 @@ contract Crowdsale is Ownable, Pausable {
   function endSale() whenNotPaused public {
     require(finalized ==  false);
     require(now > endTime);
-    finalized = true;
     finalizeSale();
   }
 
@@ -274,6 +273,7 @@ contract Crowdsale is Ownable, Pausable {
   **/
   function finalizeSale() internal {
     taylorToken.burn(taylorToken.balanceOf(this));
+    finalized = true;
     Finalized(tokensSold, weiRaised);
   }
 
