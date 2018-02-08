@@ -73,6 +73,7 @@ contract Crowdsale is Ownable, Pausable {
   uint256 public constant maximumPoolPurchase = 250 ether;
   uint256 public constant maximumPurchase = 50 ether;
   uint256 public constant specialPoolsRate = 600000000000000;
+  uint256 public constant maxGasPrice = 50000000000;
 
 
 
@@ -210,6 +211,7 @@ contract Crowdsale is Ownable, Pausable {
   function isValidPurchase() view internal returns(bool valid) {
     require(now >= startTime && now <= endTime);
     require(msg.value >= minimumPurchase);
+    require(tx.gasprice <= maxGasPrice);
     uint256 week = getCurrentWeek();
     if(week == 0 && whitelistedPools[msg.sender]){
       require(msg.value >= minimumPoolPurchase);
