@@ -58,6 +58,8 @@ contract Crowdsale is Ownable, Pausable {
   bool public finalized;
   address public wallet;
 
+  uint256 public maxGasPrice = 50000000000;
+
   uint256[4] public rates;
 
   mapping (address => bool) public whitelisted;
@@ -73,7 +75,6 @@ contract Crowdsale is Ownable, Pausable {
   uint256 public constant maximumPoolPurchase = 250 ether;
   uint256 public constant maximumPurchase = 50 ether;
   uint256 public constant specialPoolsRate = 600000000000000;
-  uint256 public constant maxGasPrice = 50000000000;
 
 
 
@@ -188,6 +189,18 @@ contract Crowdsale is Ownable, Pausable {
     } else {
       whitelisted[_address] = true;
     }
+  }
+
+  /**
+    @dev allows the owner to change the max gas price
+    @param _gasPrice uint256 the new maximum gas price
+  **/
+  function changeMaxGasprice(uint256 _gasPrice)
+    public
+    onlyOwner
+    whenNotPaused
+  {
+    maxGasPrice = _gasPrice;
   }
 
   /**
