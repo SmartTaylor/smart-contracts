@@ -105,7 +105,7 @@ contract Crowdsale is Ownable, Pausable {
     taylorToken = TaylorToken(_token);
 
     startTime = _startTime;
-    endTime = startTime + _duration * 1 days ;
+    endTime = startTime + _duration * 1 seconds ;
     wallet = _wallet;
     tokenCap = _tokenCap;
     rates = [700000000000000, 790000000000000, 860000000000000, 930000000000000];
