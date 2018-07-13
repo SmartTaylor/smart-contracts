@@ -53,7 +53,7 @@ contract TaylorToken is Ownable{
     mapping (address => bool) public whitelistedBurn;
 
     string public name = "Taylor";
-    string public symbol = "TAY";
+    string public symbol = "TAYLR";
     uint8 public decimals = 18;
     uint256 constant internal DECIMAL_CASES = 10**18;
     uint256 public totalSupply = 10**7 * DECIMAL_CASES;
